@@ -1,0 +1,397 @@
+
+#define HOW_MANY_SENSORS 2
+#define HYSTERESIS_TEMP_STEP 0.5
+#define HYSTERESIS_HUM_STEP 5
+#define DHT_SENSOR 0 // IF connected DHT 1 else 0
+#define CELLTEMPD1 1
+#define CELLTEMPN1 3
+#define CELLTEMPD2 5
+#define CELLTEMPN2 7
+#define CELLTEMPD3 9
+#define CELLTEMPN3 11
+#define CELLTEMPD4 13
+#define CELLTEMPN4 15
+#define CELLHUMD1 100
+#define CELLHUMN1 102
+#define UVPIN 6 // UV light relay
+#define hPIN 5 // Hum relay
+#define tPIN1 13 // Heat pin relay
+#define tPIN2 12 // Heat pin relay
+#define tPIN3 11 // Heat pin relay
+#define tPIN4 10 // Heat pin relay
+#define DHtPIN A0 // DHT pin
+#define DHTTYPE DHT22 // DHT model 
+#define LEDPIN 9 // LED light pin
+#include <TimeLib.h>
+#include <DHT.h>
+#include "RTClib.h"
+#include <EEPROM.h>
+#include <SerialCommand.h>
+#include <OneWire.h>
+OneWire ds (A1);
+
+byte data[12];
+byte addr1[8];
+byte addr2[8];// ID each for DS18DB20
+byte addr3[8];
+byte addr4[8];
+byte i;
+unsigned int raw;
+float temp1;
+float temp2;
+float temp3;
+float temp4;
+float h;
+float t;
+boolean Day;
+int DHTsensor = DHT_SENSOR ;
+SerialCommand sCmd;     // The demo SerialCommand object
+//DS18B22
+
+
+// Terrarium
+int sensors_count = HOW_MANY_SENSORS;
+//int UVpower = HIGH; // UV
+
+int tStatus1 = HIGH;
+int tStatus2 = HIGH;
+int tStatus3 = HIGH;
+int tStatus4 = HIGH;
+int hStatus = HIGH;
+int temp_Day1;
+int temp_Night1;
+int temp_Day2;
+int temp_Night2;
+int temp_Day3;
+int temp_Night3;
+int temp_Day4;
+int temp_Night4;
+int hum_Day;
+int hum_Night;
+
+// Terrarium
+
+int Bright = 0; //
+int LightOn = 8; // Sunrise
+int LightOff = 20; //  Sunset
+
+RTC_DS3231 rtc;
+uint32_t syncProvider() { //function which sets up the RTC as the source of external time
+  return rtc . now() . unixtime();
+}
+DHT dht(DHtPIN, DHTTYPE); //  dht
+void setup() {
+  Serial.begin(9600);
+  rtc.begin();
+  // rtc.begin(DateTime(F(__DATE__), F(__TIME__)));
+  //rtc.adjust(DateTime(__DATE__, __TIME__));//comment this out when the RTC has been set
+  setSyncProvider(syncProvider);   // the function to get the time from the RTC
+
+
+  // DHT CONECTED//
+  if ( DHTsensor == 1) {
+    dht.begin(); //
+    pinMode(hPIN, OUTPUT);
+    hum_Day = CheckEEPROM (CELLHUMD1, 40);
+    hum_Night = CheckEEPROM (CELLHUMN1, 40);
+  }
+  // DHT CONECTED//
+
+
+  pinMode(LEDPIN, OUTPUT);
+  pinMode(UVPIN, OUTPUT);
+  callbacks();  // Setup callbacks for SerialCommand commands
+  SENSOR_SEARCH();  // search onewire sensors
+  if (sensors_count == 1) {
+    onesensor();
+  }
+  else if (sensors_count == 2) {
+
+    twosensor();
+  }
+  else if (sensors_count == 3) {
+    threesensor();
+  }
+
+
+}
+void loop() {
+
+  sCmd.readSerial();
+  if (DHTsensor == 1) {
+    h = dht.readHumidity(); //
+    t = dht.readTemperature(); //
+    temp1 = t;
+    temp2 = DS18B20(addr1);
+    temp3 = DS18B20(addr2);
+    temp4 = DS18B20(addr3);
+  } else {
+    temp1 = DS18B20(addr1);
+    temp2 = DS18B20(addr2);
+    temp3 = DS18B20(addr3);
+    temp4 = DS18B20(addr4);
+  }
+  DateTime now = rtc.now();
+
+  int Hour = now.hour() ; //
+  int Minute = now.minute();
+  int Second = now.second() ;
+  boolean Day = (Hour >= 8 & Hour < 20); //
+  boolean Light = (Hour >= LightOn & Hour < LightOff); //
+
+  switch (sensors_count) {
+    case 1:
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1);
+      break;
+    case 2:
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2);
+      break;
+    case 3:
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3);
+      break;
+    case 4:
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3);
+      tStatus4 = tempcontrol(temp4, tPIN4, Day, temp_Day4, temp_Night4);
+      break;
+  }
+}
+int tempcontrol(float temp, int PIN, boolean Day, int pDay, int pNight) { //Hysteresis
+  int Status;
+  if (temp <= ((Day) ? pDay - HYSTERESIS_TEMP_STEP : pNight - HYSTERESIS_TEMP_STEP)) Status = HIGH;  //
+  if (temp >= ((Day) ? pDay + HYSTERESIS_TEMP_STEP : pNight + HYSTERESIS_TEMP_STEP)) Status = LOW; //
+  digitalWrite(PIN, Status);
+  delay (50);
+  return Status;
+}
+void callbacks() {  // Setup callbacks for SerialCommand commands
+
+  sCmd.addCommand("R",    READ);          // READ DATA
+  sCmd.addCommand("W",    WRITE);          // WRITE to memory
+  sCmd.addCommand("TW",    TIMEWRITE);          // WRITE to memory
+  sCmd.addCommand("TR",    TIMEREAD);          // WRITE to memory
+  sCmd.addCommand("HELP",    HELP);          // WRITE to memory
+
+}
+void onesensor() {
+  temp_Day1 = CheckEEPROM (CELLTEMPD1, 40);
+  temp_Night1 = CheckEEPROM (CELLTEMPN1, 40);
+  pinMode(tPIN1, OUTPUT);
+
+}
+void twosensor() {
+  onesensor();
+  temp_Day2 = CheckEEPROM (CELLTEMPD2, 40);
+  temp_Night2 = CheckEEPROM (CELLTEMPN2, 40);
+  pinMode(tPIN2, OUTPUT);
+}
+void threesensor() {
+  onesensor();
+  twosensor();
+  temp_Day3 = CheckEEPROM (CELLTEMPD3, 40);
+  temp_Night3 = CheckEEPROM (CELLTEMPN3, 40);
+  pinMode(tPIN3, OUTPUT);
+}
+void foursensor() {
+  onesensor();
+  twosensor();
+  threesensor();
+  temp_Day4 = CheckEEPROM (CELLTEMPD4, 40);
+  temp_Night4 = CheckEEPROM (CELLTEMPN4, 40);
+  pinMode(tPIN4, OUTPUT);
+}
+int CheckEEPROM (byte cell, int t) {
+  int param;
+  param = EEPROM.read(cell); // Получаем параметр из  ячейки
+  if (param >= t) param = t; // Если ячейка пуста, т.е. ее значение = 255, то устанавливаем параметр температуры в значение по умолчанию, в данном случае 26С.
+
+  return param;
+}
+void callsensor () {
+
+}
+void SENSOR_SEARCH() {
+  // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH
+  Serial.println("Getting the address...\n\r");
+  /* initiate a search for the OneWire object we created and read its value into
+    addr array we declared above*/
+
+  while (ds.search(addr1)) {
+    Serial.print("The address is:\t");
+    //read each byte in the address array
+    for ( i = 0; i < 8; i++) {
+      Serial.print("0x");
+      if (addr1[i] < 16) {
+        Serial.print('0');
+      }
+      // print each byte in the address array in hex format
+      Serial.print(addr1[i], HEX);
+      if (i < 7) {
+        Serial.print(", ");
+      }
+    }
+    // a check to make sure that what we read is correct.
+    if ( OneWire::crc8( addr1, 7) != addr1[7]) {
+      Serial.print("CRC is not valid!\n");
+      return;
+    }
+  }
+  while (ds.search(addr2)) {
+    Serial.print("The address is:\t");
+    //read each byte in the address array
+    for ( i = 8; i < 16; i++) {
+      Serial.print("0x");
+      if (addr2[i] < 16) {
+        Serial.print('0');
+      }
+      // print each byte in the address array in hex format
+      Serial.print(addr2[i], HEX);
+      if (i < 7) {
+        Serial.print(", ");
+      }
+    }
+    // a check to make sure that what we read is correct.
+    if ( OneWire::crc8( addr2, 15) != addr2[15]) {
+      Serial.print("CRC is not valid!\n");
+      return;
+    }
+  }
+  ds.reset_search();
+  return;
+  // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH
+}
+void READ() {
+
+  Serial.println("READ");
+  int val;
+  //  float h = dht.readHumidity(); // Считываем влажность
+  // float t = dht.readTemperature(); // Считываем температуру
+  char *arg;
+  arg = sCmd.next();
+  if (strcmp (arg, "dht") == 0) {
+    Serial.print("Temp DHT="); Serial.println(t);
+  }
+  if (strcmp (arg, "hum") == 0) {
+    Serial.print("Hum DHT= "); Serial.println(h);
+  }
+  if (strcmp (arg, "t1") == 0) {
+    Serial.print("Temp1 DS18="); Serial.println(temp1);
+  }
+  if  (strcmp (arg, "t2") == 0) {
+    Serial.print("Temp2 DS18="); Serial.println(temp2);
+  }
+  if  (strcmp (arg, "set") == 0) {
+    Serial.print("Day A = "); Serial.println(temp_Day1);
+    Serial.print("Night A = "); Serial.println(temp_Night1);
+    Serial.print("Day B = "); Serial.println(temp_Day2);
+    Serial.print("Nigh B = "); Serial.println(temp_Night2);
+    Serial.print("Hum Day = "); Serial.println(hum_Day);
+    Serial.print("Hum Night = "); Serial.println(hum_Night);
+  }
+  if  (strcmp (arg, "status") == 0) {
+    Serial.print("temp A = "); Serial.println(temp1);
+
+    Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+    Serial.print("temp B = "); Serial.println(temp2);
+
+    Serial.print("Heater B = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
+
+  }
+}
+void WRITE() {
+  Serial.println("WRITE");
+  char *arg;
+  int p1;
+  int p2;
+  arg = sCmd.next();
+
+  if  (strcmp (arg, "setA") == 0) {
+    arg = sCmd.next();
+    p1 = atoi(arg);
+    arg = sCmd.next();
+    p2 = atoi(arg);
+    EEPROM.write(CELLTEMPD1, p1);
+    temp_Day1 = EEPROM.read(CELLTEMPD1);
+    Serial.print("Day A = "); Serial.println(temp_Day1);
+    EEPROM.write(CELLTEMPN1, p2);
+    temp_Night1 = EEPROM.read(CELLTEMPN1);
+    Serial.print("Night A = "); Serial.println(temp_Night1);
+
+  }
+  if  (strcmp (arg, "setB") == 0) {
+    arg = sCmd.next();
+    p1 = atoi(arg);
+    arg = sCmd.next();
+    p2 = atoi(arg);
+    EEPROM.write(CELLTEMPD2, p1);
+    temp_Day2 = EEPROM.read(CELLTEMPD2);
+    Serial.print("Day B = "); Serial.println(temp_Day2);
+    EEPROM.write(CELLTEMPN2, p2);
+    temp_Night2 = EEPROM.read(CELLTEMPN2);
+    Serial.print("Night B = "); Serial.println(temp_Night2);
+
+  }
+}
+void TIMEWRITE() {
+  Serial.println("SetTime");
+  char *arg;
+  int year;
+  int month;
+  int day;
+  int hour;
+  int minutes;
+  arg = sCmd.next();
+  hour = atoi(arg);
+  arg = sCmd.next();
+  minutes = atoi(arg);
+  arg = sCmd.next();
+  day = atoi(arg);
+  arg = sCmd.next();
+  month = atoi(arg);
+  arg = sCmd.next();
+  year = atoi(arg);
+
+  rtc.adjust(DateTime(year, month, day, hour, minutes, 0));
+  rtc.now();
+  Serial.print("Set time to   ");
+
+
+
+
+}
+void TIMEREAD() {
+  DateTime now = rtc.now();
+  int Hour = now.hour() ; // Получаем значение текущего часа
+  int Minute = now.minute();
+
+  Serial.print(Hour); Serial.println(":"); Serial.println(Minute);
+
+
+
+}
+void HELP() {
+  Serial.println("W setA_B tD tN");
+  Serial.println("R set_dht_t1_t2_hum_status");
+  Serial.println("TW Hour Min Day Month Year");
+  Serial.println("TR");
+}
+float DS18B20(byte *adres) { //Считывание температуры
+  ds.reset();
+  ds.select(adres);
+  ds.write(0x44, 1); // start conversion, with parasite power on at the end
+  ds.reset();
+  ds.select(adres);
+  ds.write(0xBE); // Read Scratchpad
+
+  for (byte i = 0; i < 9; i++) // можно увеличить точность измерения до 0.0625 *С (от 9 до 12 бит)
+  { // we need 9 bytes
+    data[i] = ds.read ();
+  }
+  raw =  (data[1] << 8) | data[0];//=======Пересчитываем в температуру
+  float celsius =  (float)raw / 16.0;
+  return celsius;
+}
