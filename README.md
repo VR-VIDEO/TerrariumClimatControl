@@ -11,3 +11,21 @@ UV LIGHT control
 Sunset and Sunrise imitation with LED light
 
 control via Serial
+
+
+WHAT YOU NEED 
+
+ARDUINO
+
+RTC DS3231
+
+DHT22 for temp and hum control
+
+DS18DB20 for temp control
+
+Releys or SSR. For UV light only regular relay
+
+Bluetoth modul for control via phone
+ or tablet
+ 
+ For LED you need SSR or MOSFET
