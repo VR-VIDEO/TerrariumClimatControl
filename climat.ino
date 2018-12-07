@@ -1,5 +1,5 @@
 
-#define HOW_MANY_SENSORS 2
+#define MODE_SENSORS 2
 #define HYSTERESIS_TEMP_STEP 0.5
 #define HYSTERESIS_HUM_STEP 5
 #define DHT_SENSOR 0 // IF connected DHT 1 else 0
@@ -13,13 +13,15 @@
 #define CELLTEMPN4 15
 #define CELLHUMD1 100
 #define CELLHUMN1 102
+#define CELLHUMD2 104
+#define CELLHUMN2 106
 #define UVPIN 6 // UV light relay
-#define hPIN 5 // Hum relay
-#define tPIN1 13 // Heat pin relay
-#define tPIN2 12 // Heat pin relay
-#define tPIN3 11 // Heat pin relay
-#define tPIN4 10 // Heat pin relay
+#define tPIN1 13 //  pin relay
+#define tPIN2 12 //  pin relay
+#define tPIN3 11 //  pin relay
+#define tPIN4 10 //  pin relay
 #define DHtPIN A0 // DHT pin
+#define DHtPIN2 A1 // DHT pin
 #define DHTTYPE DHT22 // DHT model 
 #define LEDPIN 9 // LED light pin
 #include <TimeLib.h>
@@ -43,14 +45,16 @@ float temp3;
 float temp4;
 float h;
 float t;
+float h2;
+float t2;
 boolean Day;
-int DHTsensor = DHT_SENSOR ;
+
 SerialCommand sCmd;     // The demo SerialCommand object
 //DS18B22
 
 
 // Terrarium
-int sensors_count = HOW_MANY_SENSORS;
+int sensor_mode = MODE_SENSORS;
 //int UVpower = HIGH; // UV
 
 int tStatus1 = HIGH;
@@ -66,8 +70,10 @@ int temp_Day3;
 int temp_Night3;
 int temp_Day4;
 int temp_Night4;
-int hum_Day;
-int hum_Night;
+int hum_Day1;
+int hum_Night1;
+int hum_Day2;
+int hum_Night2;
 
 // Terrarium
 
@@ -79,7 +85,8 @@ RTC_DS3231 rtc;
 uint32_t syncProvider() { //function which sets up the RTC as the source of external time
   return rtc . now() . unixtime();
 }
-DHT dht(DHtPIN, DHTTYPE); //  dht
+DHT dht1(DHtPIN, DHTTYPE); //  dht
+DHT dht2(DHtPIN2, DHTTYPE); //  dht
 void setup() {
   Serial.begin(9600);
   rtc.begin();
@@ -88,29 +95,40 @@ void setup() {
   setSyncProvider(syncProvider);   // the function to get the time from the RTC
 
 
-  // DHT CONECTED//
-  if ( DHTsensor == 1) {
-    dht.begin(); //
-    pinMode(hPIN, OUTPUT);
-    hum_Day = CheckEEPROM (CELLHUMD1, 40);
-    hum_Night = CheckEEPROM (CELLHUMN1, 40);
-  }
-  // DHT CONECTED//
+
 
 
   pinMode(LEDPIN, OUTPUT);
   pinMode(UVPIN, OUTPUT);
   callbacks();  // Setup callbacks for SerialCommand commands
   SENSOR_SEARCH();  // search onewire sensors
-  if (sensors_count == 1) {
-    onesensor();
-  }
-  else if (sensors_count == 2) {
 
-    twosensor();
-  }
-  else if (sensors_count == 3) {
-    threesensor();
+
+  switch (sensor_mode) {
+    case 1:
+      mode1();
+      break;
+    case 2:
+      mode2();
+      break;
+    case 3:
+      mode3();
+      break;
+    case 4:
+      mode4();
+      break;
+    case 5:
+      mode5();
+      break;
+    case 6:
+      mode6();
+      break;
+    case 7:
+      mode7();
+      break;
+    case 8:
+      mode8();
+      break;
   }
 
 
@@ -118,19 +136,6 @@ void setup() {
 void loop() {
 
   sCmd.readSerial();
-  if (DHTsensor == 1) {
-    h = dht.readHumidity(); //
-    t = dht.readTemperature(); //
-    temp1 = t;
-    temp2 = DS18B20(addr1);
-    temp3 = DS18B20(addr2);
-    temp4 = DS18B20(addr3);
-  } else {
-    temp1 = DS18B20(addr1);
-    temp2 = DS18B20(addr2);
-    temp3 = DS18B20(addr3);
-    temp4 = DS18B20(addr4);
-  }
   DateTime now = rtc.now();
 
   int Hour = now.hour() ; //
@@ -139,31 +144,75 @@ void loop() {
   boolean Day = (Hour >= 8 & Hour < 20); //
   boolean Light = (Hour >= LightOn & Hour < LightOff); //
 
-  switch (sensors_count) {
+  switch (sensor_mode) {
     case 1:
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1);
+      temp1 = DS18B20(addr1);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
       break;
     case 2:
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2);
+      temp1 = dht1.readTemperature();
+      temp2 = dht1.readHumidity();
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
       break;
     case 3:
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2);
-      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3);
+      temp1 = DS18B20(addr1);
+      temp2 = dht1.readTemperature();
+      temp3 = dht1.readHumidity();
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
       break;
-    case 4:
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2);
-      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3);
-      tStatus4 = tempcontrol(temp4, tPIN4, Day, temp_Day4, temp_Night4);
+          case 4:
+      temp1 = DS18B20(addr1);
+      temp2 = DS18B20(addr2);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
+      break;
+          case 5:
+      temp1 = DS18B20(addr1);
+      temp2 = DS18B20(addr2);
+      temp3 = DS18B20(addr3);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3, HYSTERESIS_TEMP_STEP);
+      break;
+    case 6:
+      temp1 = DS18B20(addr1);
+      temp2 = DS18B20(addr2);
+      temp3 = DS18B20(addr3);
+      temp4 = DS18B20(addr4);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3, HYSTERESIS_TEMP_STEP);
+      tStatus4 = tempcontrol(temp4, tPIN4, Day, temp_Day4, temp_Night4, HYSTERESIS_TEMP_STEP);
+      break;
+    case 7:
+      temp1 = DS18B20(addr1);
+      temp2 = DS18B20(addr2);
+      temp3 = dht1.readTemperature();
+      temp4 = dht1.readHumidity();
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3, HYSTERESIS_TEMP_STEP);
+      tStatus4 = tempcontrol(temp4, tPIN4, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
+      break;
+    case 8:
+      temp1 = dht1.readTemperature();
+      temp2 = dht1.readHumidity();
+      temp3 = dht2.readTemperature();
+      temp4 = dht2.readHumidity();
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
+      tStatus4 = tempcontrol(temp4, tPIN4, Day, hum_Day2, hum_Night2, HYSTERESIS_HUM_STEP);
       break;
   }
 }
-int tempcontrol(float temp, int PIN, boolean Day, int pDay, int pNight) { //Hysteresis
+int tempcontrol(float temp, int PIN, boolean Day, int pDay, int pNight, int Hstep) { //Hysteresis
   int Status;
-  if (temp <= ((Day) ? pDay - HYSTERESIS_TEMP_STEP : pNight - HYSTERESIS_TEMP_STEP)) Status = HIGH;  //
-  if (temp >= ((Day) ? pDay + HYSTERESIS_TEMP_STEP : pNight + HYSTERESIS_TEMP_STEP)) Status = LOW; //
+  if (temp <= ((Day) ? pDay - Hstep : pNight - Hstep)) Status = HIGH;  //
+  if (temp >= ((Day) ? pDay + Hstep : pNight + Hstep)) Status = LOW; //
   digitalWrite(PIN, Status);
   delay (50);
   return Status;
@@ -177,32 +226,83 @@ void callbacks() {  // Setup callbacks for SerialCommand commands
   sCmd.addCommand("HELP",    HELP);          // WRITE to memory
 
 }
-void onesensor() {
+void mode1() {
   temp_Day1 = CheckEEPROM (CELLTEMPD1, 40);
   temp_Night1 = CheckEEPROM (CELLTEMPN1, 40);
   pinMode(tPIN1, OUTPUT);
 
 }
-void twosensor() {
-  onesensor();
-  temp_Day2 = CheckEEPROM (CELLTEMPD2, 40);
-  temp_Night2 = CheckEEPROM (CELLTEMPN2, 40);
+void mode2() {
+  dht1.begin();
+  temp_Day1 = CheckEEPROM (CELLTEMPD1, 40);
+  temp_Night1 = CheckEEPROM (CELLTEMPN1, 40);
+  hum_Day1 = CheckEEPROM (CELLHUMD1, 40);
+  hum_Night1 = CheckEEPROM (CELLHUMN1, 70);
+  pinMode(tPIN1, OUTPUT);
   pinMode(tPIN2, OUTPUT);
 }
-void threesensor() {
-  onesensor();
-  twosensor();
+void mode3() {
+  dht1.begin();
+  temp_Day1 = CheckEEPROM (CELLTEMPD1, 40);
+  temp_Night1 = CheckEEPROM (CELLTEMPN1, 40);
+  temp_Day2 = CheckEEPROM (CELLTEMPD2, 40);
+  temp_Night2 = CheckEEPROM (CELLTEMPN2, 40);
+  hum_Day1 = CheckEEPROM (CELLHUMD1, 40);
+  hum_Night1 = CheckEEPROM (CELLHUMN1, 70);
+  pinMode(tPIN1, OUTPUT);
+  pinMode(tPIN2, OUTPUT);
+  pinMode(tPIN3, OUTPUT);
+}
+void mode4() {
+  temp_Day1 = CheckEEPROM (CELLTEMPD1, 40);
+  temp_Night1 = CheckEEPROM (CELLTEMPN1, 40);
+  temp_Day2 = CheckEEPROM (CELLTEMPD2, 40);
+  temp_Night2 = CheckEEPROM (CELLTEMPN2, 40);
+  pinMode(tPIN1, OUTPUT);
+  pinMode(tPIN2, OUTPUT);
+}
+void mode5() {
+  temp_Day1 = CheckEEPROM (CELLTEMPD1, 40);
+  temp_Night1 = CheckEEPROM (CELLTEMPN1, 40);
+  temp_Day2 = CheckEEPROM (CELLTEMPD2, 40);
+  temp_Night2 = CheckEEPROM (CELLTEMPN2, 40);
+  temp_Day3 = CheckEEPROM (CELLTEMPD3, 40);
+  temp_Night3 = CheckEEPROM (CELLTEMPN3, 40);
+  pinMode(tPIN1, OUTPUT);
+  pinMode(tPIN2, OUTPUT);
+  pinMode(tPIN3, OUTPUT);
+}
+void mode6() {
+  temp_Day1 = CheckEEPROM (CELLTEMPD1, 40);
+  temp_Night1 = CheckEEPROM (CELLTEMPN1, 40);
+  temp_Day2 = CheckEEPROM (CELLTEMPD2, 40);
+  temp_Night2 = CheckEEPROM (CELLTEMPN2, 40);
+  temp_Day3 = CheckEEPROM (CELLTEMPD3, 40);
+  temp_Night3 = CheckEEPROM (CELLTEMPN3, 40);
+  temp_Day4 = CheckEEPROM (CELLTEMPD4, 40);
+  temp_Night4 = CheckEEPROM (CELLTEMPN4, 40);
+  pinMode(tPIN1, OUTPUT);
+  pinMode(tPIN2, OUTPUT);
+  pinMode(tPIN3, OUTPUT);
+  pinMode(tPIN4, OUTPUT);
+}
+void mode7() {
+  mode2();
+  dht2.begin();
   temp_Day3 = CheckEEPROM (CELLTEMPD3, 40);
   temp_Night3 = CheckEEPROM (CELLTEMPN3, 40);
   pinMode(tPIN3, OUTPUT);
+
 }
-void foursensor() {
-  onesensor();
-  twosensor();
-  threesensor();
-  temp_Day4 = CheckEEPROM (CELLTEMPD4, 40);
-  temp_Night4 = CheckEEPROM (CELLTEMPN4, 40);
+void mode8() {
+  mode2();
+  temp_Day2 = CheckEEPROM (CELLTEMPD1, 40);
+  temp_Night2 = CheckEEPROM (CELLTEMPN1, 40);
+  hum_Day2 = CheckEEPROM (CELLHUMD2, 40);
+  hum_Night2 = CheckEEPROM (CELLHUMN2, 70);
+  pinMode(tPIN3, OUTPUT);
   pinMode(tPIN4, OUTPUT);
+
 }
 int CheckEEPROM (byte cell, int t) {
   int param;
@@ -289,8 +389,8 @@ void READ() {
     Serial.print("Night A = "); Serial.println(temp_Night1);
     Serial.print("Day B = "); Serial.println(temp_Day2);
     Serial.print("Nigh B = "); Serial.println(temp_Night2);
-    Serial.print("Hum Day = "); Serial.println(hum_Day);
-    Serial.print("Hum Night = "); Serial.println(hum_Night);
+    Serial.print("Hum Day = "); Serial.println(hum_Day1);
+    Serial.print("Hum Night = "); Serial.println(hum_Night1);
   }
   if  (strcmp (arg, "status") == 0) {
     Serial.print("temp A = "); Serial.println(temp1);
