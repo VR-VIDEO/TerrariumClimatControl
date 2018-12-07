@@ -1,5 +1,5 @@
 
-#define MODE_SENSORS 2
+#define MODE_SENSORS 6
 #define HYSTERESIS_TEMP_STEP 0.5
 #define HYSTERESIS_HUM_STEP 5
 #define DHT_SENSOR 0 // IF connected DHT 1 else 0
@@ -43,10 +43,6 @@ float temp1;
 float temp2;
 float temp3;
 float temp4;
-float h;
-float t;
-float h2;
-float t2;
 boolean Day;
 
 SerialCommand sCmd;     // The demo SerialCommand object
@@ -163,13 +159,13 @@ void loop() {
       tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
       tStatus3 = tempcontrol(temp3, tPIN3, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
       break;
-          case 4:
+    case 4:
       temp1 = DS18B20(addr1);
       temp2 = DS18B20(addr2);
       tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
       tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
       break;
-          case 5:
+    case 5:
       temp1 = DS18B20(addr1);
       temp2 = DS18B20(addr2);
       temp3 = DS18B20(addr3);
@@ -364,42 +360,176 @@ void SENSOR_SEARCH() {
   return;
   // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH // SENSOR SEARCH
 }
+void print_sensor_data() {
+  switch (sensor_mode) {
+    case 1:
+      Serial.print("Temp1 = "); Serial.println(temp1);
+      break;
+    case 2:
+      Serial.print("Temp DHT= "); Serial.println(temp1);
+      Serial.print("Hum DHT= "); Serial.println(temp2);
+      break;
+    case 3:
+      Serial.print("Temp = "); Serial.println(temp1);
+      Serial.print("Temp DHT= "); Serial.println(temp2);
+      Serial.print("Hum DHT= "); Serial.println(temp3);
+      break;
+    case 4:
+      Serial.print("Temp = "); Serial.println(temp1);
+      Serial.print("Temp2 = "); Serial.println(temp2);
+      break;
+    case 5:
+      Serial.print("Temp = "); Serial.println(temp1);
+      Serial.print("Temp2 = "); Serial.println(temp2);
+      Serial.print("Temp3 = "); Serial.println(temp3);
+
+      break;
+    case 6:
+      Serial.print("Temp = "); Serial.println(temp1);
+      Serial.print("Temp2 = "); Serial.println(temp2);
+      Serial.print("Temp3 = "); Serial.println(temp3);
+      Serial.print("Temp4 = "); Serial.println(temp4);
+      break;
+    case 7:
+      Serial.print("Temp = "); Serial.println(temp1);
+      Serial.print("Temp2 = "); Serial.println(temp2);
+      Serial.print("Temp DHT = "); Serial.println(temp3);
+      Serial.print("Hum DHT = "); Serial.println(temp4);
+      break;
+    case 8:
+      Serial.print("Temp DHT= "); Serial.println(temp1);
+      Serial.print("Hum DHT= "); Serial.println(temp2);
+      Serial.print("Temp2 DHT= "); Serial.println(temp3);
+      Serial.print("Hum2 DHT= "); Serial.println(temp4);
+      break;
+  }
+}
+void print_setting_data() {
+  switch (sensor_mode) {
+    case 1:
+      Serial.print("Day temp A = "); Serial.println(temp_Day1);
+      Serial.print("Night temp A = "); Serial.println(temp_Night1);
+      break;
+    case 2:
+      Serial.print("Day temp A = "); Serial.println(temp_Day1);
+      Serial.print("Night temp A = "); Serial.println(temp_Night1);
+      Serial.print("Day hum A = "); Serial.println(hum_Day1);
+      Serial.print("Night hum A = "); Serial.println(hum_Night1);
+      break;
+    case 3:
+      Serial.print("Day temp A = "); Serial.println(temp_Day1);
+      Serial.print("Night temp A = "); Serial.println(temp_Night1);
+      Serial.print("Day temp B = "); Serial.println(temp_Day2);
+      Serial.print("Night temp B = "); Serial.println(temp_Night2);
+      Serial.print("Day hum B = "); Serial.println(hum_Day1);
+      Serial.print("Night hum B = "); Serial.println(hum_Night1);
+      break;
+    case 4:
+      Serial.print("Day temp A = "); Serial.println(temp_Day1);
+      Serial.print("Night temp A = "); Serial.println(temp_Night1);
+      Serial.print("Day temp B = "); Serial.println(temp_Day2);
+      Serial.print("Night temp B = "); Serial.println(temp_Night2);
+      break;
+    case 5:
+      Serial.print("Day temp A = "); Serial.println(temp_Day1);
+      Serial.print("Night temp A = "); Serial.println(temp_Night1);
+      Serial.print("Day temp B = "); Serial.println(temp_Day2);
+      Serial.print("Night temp B = "); Serial.println(temp_Night2);
+      Serial.print("Day temp C = "); Serial.println(temp_Day3);
+      Serial.print("Night temp C = "); Serial.println(temp_Night3);
+      break;
+    case 6:
+      Serial.print("Day temp A = "); Serial.println(temp_Day1);
+      Serial.print("Night temp A = "); Serial.println(temp_Night1);
+      Serial.print("Day temp B = "); Serial.println(temp_Day2);
+      Serial.print("Night temp B = "); Serial.println(temp_Night2);
+      Serial.print("Day temp C = "); Serial.println(temp_Day3);
+      Serial.print("Night temp C = "); Serial.println(temp_Night3);
+      Serial.print("Day temp D = "); Serial.println(temp_Day4);
+      Serial.print("Night temp D = "); Serial.println(temp_Night4);
+      break;
+    case 7:
+      Serial.print("Day temp A = "); Serial.println(temp_Day1);
+      Serial.print("Night temp A = "); Serial.println(temp_Night1);
+      Serial.print("Day temp B = "); Serial.println(temp_Day2);
+      Serial.print("Night temp B = "); Serial.println(temp_Night2);
+      Serial.print("Day temp C = "); Serial.println(temp_Day3);
+      Serial.print("Night temp C = "); Serial.println(temp_Night3);
+      Serial.print("Day hum C = "); Serial.println(hum_Day1);
+      Serial.print("Night hum C = "); Serial.println(hum_Night1);
+      break;
+    case 8:
+      Serial.print("Day temp A = "); Serial.println(temp_Day1);
+      Serial.print("Night temp A = "); Serial.println(temp_Night1);
+      Serial.print("Day hum A = "); Serial.println(hum_Day1);
+      Serial.print("Night hum A = "); Serial.println(hum_Night1);
+      Serial.print("Day temp B = "); Serial.println(temp_Day2);
+      Serial.print("Night temp B = "); Serial.println(temp_Night2);
+      Serial.print("Day hum B = "); Serial.println(hum_Day2);
+      Serial.print("Night hum B = "); Serial.println(hum_Night2);
+      break;
+  }
+}
+void print_status_data() {
+  switch (sensor_mode) {
+    case 1:
+      Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+      break;
+    case 2:
+      Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+      Serial.print("Hum A = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
+      break;
+    case 3:
+      Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater B = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
+      Serial.print("Hum B = "); Serial.println((tStatus3 == HIGH) ? "On" : "Off");;
+      break;
+    case 4:
+      Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater B = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
+      break;
+    case 5:
+      Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater B = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater C = "); Serial.println((tStatus3 == HIGH) ? "On" : "Off");;
+
+      break;
+    case 6:
+      Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater B = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater C = "); Serial.println((tStatus3 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater D = "); Serial.println((tStatus4 == HIGH) ? "On" : "Off");;
+      break;
+    case 7:
+      Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater B = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater C = "); Serial.println((tStatus3 == HIGH) ? "On" : "Off");;
+      Serial.print("Hum C = "); Serial.println((tStatus4 == HIGH) ? "On" : "Off");;
+      break;
+    case 8:
+      Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
+      Serial.print("Hum A = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
+      Serial.print("Heater B = "); Serial.println((tStatus3 == HIGH) ? "On" : "Off");;
+      Serial.print("Hum B = "); Serial.println((tStatus4 == HIGH) ? "On" : "Off");;
+      break;
+  }
+}
 void READ() {
 
   Serial.println("READ");
   int val;
-  //  float h = dht.readHumidity(); // Считываем влажность
-  // float t = dht.readTemperature(); // Считываем температуру
   char *arg;
   arg = sCmd.next();
-  if (strcmp (arg, "dht") == 0) {
-    Serial.print("Temp DHT="); Serial.println(t);
+  if (strcmp (arg, "sensor") == 0) {
+    print_sensor_data();
   }
-  if (strcmp (arg, "hum") == 0) {
-    Serial.print("Hum DHT= "); Serial.println(h);
-  }
-  if (strcmp (arg, "t1") == 0) {
-    Serial.print("Temp1 DS18="); Serial.println(temp1);
-  }
-  if  (strcmp (arg, "t2") == 0) {
-    Serial.print("Temp2 DS18="); Serial.println(temp2);
-  }
+
   if  (strcmp (arg, "set") == 0) {
-    Serial.print("Day A = "); Serial.println(temp_Day1);
-    Serial.print("Night A = "); Serial.println(temp_Night1);
-    Serial.print("Day B = "); Serial.println(temp_Day2);
-    Serial.print("Nigh B = "); Serial.println(temp_Night2);
-    Serial.print("Hum Day = "); Serial.println(hum_Day1);
-    Serial.print("Hum Night = "); Serial.println(hum_Night1);
+    print_setting_data();
+
   }
   if  (strcmp (arg, "status") == 0) {
-    Serial.print("temp A = "); Serial.println(temp1);
-
-    Serial.print("Heater A = "); Serial.println((tStatus1 == HIGH) ? "On" : "Off");;
-    Serial.print("temp B = "); Serial.println(temp2);
-
-    Serial.print("Heater B = "); Serial.println((tStatus2 == HIGH) ? "On" : "Off");;
-
+    print_status_data();
   }
 }
 void WRITE() {
@@ -479,7 +609,7 @@ void HELP() {
   Serial.println("TW Hour Min Day Month Year");
   Serial.println("TR");
 }
-float DS18B20(byte *adres) { //Считывание температуры
+float DS18B20(byte * adres) { //Считывание температуры
   ds.reset();
   ds.select(adres);
   ds.write(0x44, 1); // start conversion, with parasite power on at the end
