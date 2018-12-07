@@ -57,6 +57,7 @@ int tStatus2 = HIGH;
 int tStatus3 = HIGH;
 int tStatus4 = HIGH;
 int hStatus = HIGH;
+int UVpower = HIGH;
 int temp_Day1;
 int temp_Night1;
 int temp_Day2;
@@ -138,6 +139,19 @@ void loop() {
   int Second = now.second() ;
   boolean Day = (Hour >= 8 & Hour < 20); //
   boolean Light = (Hour >= LightOn & Hour < LightOff); //
+  // UV Light Control
+if (Hour==LightOn) UVpower = HIGH;
+else if (Hour==LightOff) UVpower = LOW;
+else UVpower = (Light) ? HIGH:LOW; 
+digitalWrite(UVPIN, UVpower);
+// UV Light Control
+
+// LED
+if (Hour==LightOn-1) Bright = 1 + sq(Minute)/15; // функция 1+x^2/15 позволяет растянуть промежуток тусклого свечения ленты 
+else if (Hour==LightOff) Bright = 1+sq(60-Minute)/15; 
+else Bright = (Light) ? 255:3; 
+analogWrite(LEDPIN, Bright); 
+//LED
 
   switch (sensor_mode) {
     case 1:
@@ -684,8 +698,8 @@ void TIMEREAD() {
 
 }
 void HELP() {
-  Serial.println("W setA_B tD tN");
-  Serial.println("R set_dht_t1_t2_hum_status");
+  Serial.println("W setA_B_C_D tD tN");
+  Serial.println("R set_status");
   Serial.println("TW Hour Min Day Month Year");
   Serial.println("TR");
 }
