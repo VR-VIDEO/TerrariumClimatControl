@@ -514,6 +514,55 @@ void print_status_data() {
       break;
   }
 }
+void write_setting_data(int p1,int p2,int cellD,int cellN,int terr) {
+    EEPROM.write(cellD, p1);
+    EEPROM.write(cellN, p2);
+    switch (terr) {
+    case 1:
+       temp_Day1 = EEPROM.read(cellD);
+       temp_Night1 = EEPROM.read(cellN); 
+       Serial.print("Day A = "); Serial.println(temp_Day1);
+       Serial.print("Night A = "); Serial.println(temp_Night1);
+       Serial.print(" --- DONE");
+      break;
+    case 2:
+         temp_Day2 = EEPROM.read(cellD);
+       temp_Night2 = EEPROM.read(cellN); 
+             Serial.print("Day B = "); Serial.println(temp_Day2);
+       Serial.print("Night B = "); Serial.println(temp_Night2);
+       Serial.print(" --- DONE");
+      break;
+    case 3:
+           temp_Day3 = EEPROM.read(cellD);
+       temp_Night3 = EEPROM.read(cellN); 
+             Serial.print("Day C = "); Serial.println(temp_Day3);
+       Serial.print("Night C = "); Serial.println(temp_Night3);
+       Serial.print(" --- DONE");
+      break;
+    case 4:
+        temp_Day4 = EEPROM.read(cellD);
+       temp_Night4 = EEPROM.read(cellN); 
+             Serial.print("Day D = "); Serial.println(temp_Day4);
+       Serial.print("Night D = "); Serial.println(temp_Night4);
+       Serial.print(" --- DONE");
+      break;
+          case 5:
+        hum_Day1 = EEPROM.read(cellD);
+       hum_Night1 = EEPROM.read(cellN); 
+             Serial.print("Day hum A = "); Serial.println(hum_Day1);
+       Serial.print("Night hum A = "); Serial.println(hum_Night1);
+       Serial.print(" --- DONE");
+      break;
+          case 6:
+        hum_Day2 = EEPROM.read(cellD);
+       hum_Night2 = EEPROM.read(cellN); 
+                    Serial.print("Day hum B = "); Serial.println(hum_Day2);
+       Serial.print("Night hum B = "); Serial.println(hum_Night2);
+       Serial.println(" --- DONE");
+      break;
+    }
+       Serial.println("Setting complete");
+}
 void READ() {
 
   Serial.println("READ");
@@ -537,32 +586,60 @@ void WRITE() {
   char *arg;
   int p1;
   int p2;
+  int terr;
   arg = sCmd.next();
 
   if  (strcmp (arg, "setA") == 0) {
+    terr = 1;
     arg = sCmd.next();
     p1 = atoi(arg);
     arg = sCmd.next();
     p2 = atoi(arg);
-    EEPROM.write(CELLTEMPD1, p1);
-    temp_Day1 = EEPROM.read(CELLTEMPD1);
-    Serial.print("Day A = "); Serial.println(temp_Day1);
-    EEPROM.write(CELLTEMPN1, p2);
-    temp_Night1 = EEPROM.read(CELLTEMPN1);
-    Serial.print("Night A = "); Serial.println(temp_Night1);
-
+    write_setting_data(p1,p2,CELLTEMPD1,CELLTEMPN1,terr);
   }
   if  (strcmp (arg, "setB") == 0) {
+      terr = 2;
     arg = sCmd.next();
     p1 = atoi(arg);
     arg = sCmd.next();
     p2 = atoi(arg);
-    EEPROM.write(CELLTEMPD2, p1);
-    temp_Day2 = EEPROM.read(CELLTEMPD2);
-    Serial.print("Day B = "); Serial.println(temp_Day2);
-    EEPROM.write(CELLTEMPN2, p2);
-    temp_Night2 = EEPROM.read(CELLTEMPN2);
-    Serial.print("Night B = "); Serial.println(temp_Night2);
+    write_setting_data(p1,p2,CELLTEMPD2,CELLTEMPN2,terr);
+
+  }
+    if  (strcmp (arg, "setC") == 0) {
+      terr = 3;
+    arg = sCmd.next();
+    p1 = atoi(arg);
+    arg = sCmd.next();
+    p2 = atoi(arg);
+    write_setting_data(p1,p2,CELLTEMPD3,CELLTEMPN3,terr);
+
+  }
+    if  (strcmp (arg, "setD") == 0) {
+      terr = 4;
+    arg = sCmd.next();
+    p1 = atoi(arg);
+    arg = sCmd.next();
+    p2 = atoi(arg);
+    write_setting_data(p1,p2,CELLTEMPD4,CELLTEMPN4,terr);
+
+  }
+      if  (strcmp (arg, "setAH") == 0) {
+      terr = 5;
+    arg = sCmd.next();
+    p1 = atoi(arg);
+    arg = sCmd.next();
+    p2 = atoi(arg);
+    write_setting_data(p1,p2,CELLHUMD1,CELLHUMN1,terr);
+
+  }
+        if  (strcmp (arg, "setBH") == 0) {
+      terr = 6;
+    arg = sCmd.next();
+    p1 = atoi(arg);
+    arg = sCmd.next();
+    p2 = atoi(arg);
+    write_setting_data(p1,p2,CELLHUMD2,CELLHUMN2,terr);
 
   }
 }
