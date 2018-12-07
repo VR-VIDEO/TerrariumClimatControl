@@ -572,13 +572,16 @@ void READ() {
     print_sensor_data();
   }
 
-  if  (strcmp (arg, "set") == 0) {
+ else if  (strcmp (arg, "set") == 0) {
     print_setting_data();
 
   }
-  if  (strcmp (arg, "status") == 0) {
+else  if  (strcmp (arg, "status") == 0) {
     print_status_data();
   }
+  else{ 
+    Serial.println("ERROR");
+    }
 }
 void WRITE() {
   Serial.println("WRITE");
@@ -596,7 +599,7 @@ void WRITE() {
     p2 = atoi(arg);
     write_setting_data(p1,p2,CELLTEMPD1,CELLTEMPN1,terr);
   }
-  if  (strcmp (arg, "setB") == 0) {
+   if  (strcmp (arg, "setB") == 0 ) {
       terr = 2;
     arg = sCmd.next();
     p1 = atoi(arg);
@@ -632,7 +635,7 @@ void WRITE() {
     write_setting_data(p1,p2,CELLHUMD1,CELLHUMN1,terr);
 
   }
-        if  (strcmp (arg, "setBH") == 0) {
+         if  (strcmp (arg, "setBH") == 0) {
       terr = 6;
     arg = sCmd.next();
     p1 = atoi(arg);
@@ -641,6 +644,7 @@ void WRITE() {
     write_setting_data(p1,p2,CELLHUMD2,CELLHUMN2,terr);
 
   }
+
 }
 void TIMEWRITE() {
   Serial.println("SetTime");
