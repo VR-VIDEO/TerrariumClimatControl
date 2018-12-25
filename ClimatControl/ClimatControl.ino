@@ -1,5 +1,5 @@
 
-#define MODE_SENSORS 6
+#define MODE_SENSORS 2
 #define HYSTERESIS_TEMP_STEP 0.5
 #define HYSTERESIS_HUM_STEP 5
 #define CELLTEMPD1 1
@@ -14,13 +14,13 @@
 #define CELLHUMN1 102
 #define CELLHUMD2 104
 #define CELLHUMN2 106
-#define UVPIN 6 // UV light relay
-#define tPIN1 13 //  pin relay
-#define tPIN2 12 //  pin relay
-#define tPIN3 11 //  pin relay
-#define tPIN4 10 //  pin relay
+#define UVPIN 9 // UV light relay
+#define tPIN1 5 //  pin relay
+#define tPIN2 6 //  pin relay
+#define tPIN3 99 //  pin relay
+#define tPIN4 98 //  pin relay
 #define DHtPIN A0 // DHT pin
-#define DHtPIN2 A1 // DHT pin
+#define DHtPIN2 97 // DHT pin
 #define DHTTYPE DHT22 // DHT model 
 #define LEDPIN 9 // LED light pin
 #include <TimeLib.h>
@@ -29,6 +29,7 @@
 #include <EEPROM.h>
 #include <SerialCommand.h>
 #include <OneWire.h>
+
 OneWire ds (A1);
 
 byte data[12];
@@ -44,6 +45,8 @@ float temp3;
 float temp4;
 boolean Day;
 
+
+
 SerialCommand sCmd;     // The demo SerialCommand object
 //DS18B22
 
@@ -52,7 +55,7 @@ SerialCommand sCmd;     // The demo SerialCommand object
 int sensor_mode = MODE_SENSORS;
 //int UVpower = HIGH; // UV
 
-int tStatus1 = HIGH;
+int tStatus1 ;
 int tStatus2 = HIGH;
 int tStatus3 = HIGH;
 int tStatus4 = HIGH;
@@ -97,7 +100,8 @@ void setup() {
   pinMode(LEDPIN, OUTPUT);
   pinMode(UVPIN, OUTPUT);
   callbacks();  // Setup callbacks for SerialCommand commands
-  SENSOR_SEARCH();  // search onewire sensors
+
+//  SENSOR_SEARCH();  // search onewire sensors
 
 
   switch (sensor_mode) {
@@ -128,6 +132,9 @@ void setup() {
   }
 
 
+
+
+ 
 }
 void loop() {
 
@@ -139,12 +146,14 @@ void loop() {
   int Second = now.second() ;
   boolean Day = (Hour >= 8 & Hour < 20); //
   boolean Light = (Hour >= LightOn & Hour < LightOff); //
+  
   // UV Light Control
 if (Hour==LightOn) UVpower = HIGH;
 else if (Hour==LightOff) UVpower = LOW;
 else UVpower = (Light) ? HIGH:LOW; 
 digitalWrite(UVPIN, UVpower);
 // UV Light Control
+
 
 // LED
 if (Hour==LightOn-1) Bright = 1 + sq(Minute)/15; // функция 1+x^2/15 позволяет растянуть промежуток тусклого свечения ленты 
@@ -163,6 +172,7 @@ analogWrite(LEDPIN, Bright);
       temp2 = dht1.readHumidity();
       tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
       tStatus2 = tempcontrol(temp2, tPIN2, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
+      Serial.println(temp1);
       break;
     case 3:
       temp1 = DS18B20(addr1);
@@ -220,12 +230,22 @@ analogWrite(LEDPIN, Bright);
 }
 int tempcontrol(float temp, int PIN, boolean Day, int pDay, int pNight, int Hstep) { //Hysteresis
   int Status;
-  if (temp <= ((Day) ? pDay - Hstep : pNight - Hstep)) Status = HIGH;  //
-  if (temp >= ((Day) ? pDay + Hstep : pNight + Hstep)) Status = LOW; //
+ if (temp >= ((Day) ? pDay + Hstep : pNight + Hstep)) Status = LOW; //
+ if (temp <= ((Day) ? pDay - Hstep : pNight - Hstep )) Status = HIGH;  //
+  
+   
+  
   digitalWrite(PIN, Status);
-  delay (50);
+  delay (100);
   return Status;
 }
+
+
+
+
+ 
+
+
 void callbacks() {  // Setup callbacks for SerialCommand commands
 
   sCmd.addCommand("R",    READ);          // READ DATA
