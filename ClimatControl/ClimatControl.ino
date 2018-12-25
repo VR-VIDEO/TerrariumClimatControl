@@ -55,7 +55,7 @@ SerialCommand sCmd;     // The demo SerialCommand object
 int sensor_mode = MODE_SENSORS;
 //int UVpower = HIGH; // UV
 
-int tStatus1 ;
+int tStatus1 = HIGH ;
 int tStatus2 = HIGH;
 int tStatus3 = HIGH;
 int tStatus4 = HIGH;
@@ -165,76 +165,74 @@ analogWrite(LEDPIN, Bright);
   switch (sensor_mode) {
     case 1:
       temp1 = DS18B20(addr1);
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1,tStatus1, HYSTERESIS_TEMP_STEP);
       break;
     case 2:
       temp1 = dht1.readTemperature();
       temp2 = dht1.readHumidity();
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1,tStatus1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, hum_Day1, hum_Night1,tStatus2, HYSTERESIS_HUM_STEP);
       Serial.println(temp1);
       break;
     case 3:
       temp1 = DS18B20(addr1);
       temp2 = dht1.readTemperature();
       temp3 = dht1.readHumidity();
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
-      tStatus3 = tempcontrol(temp3, tPIN3, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1,tStatus1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2,tStatus2, HYSTERESIS_TEMP_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, hum_Day1, hum_Night1,tStatus3, HYSTERESIS_HUM_STEP);
       break;
     case 4:
       temp1 = DS18B20(addr1);
       temp2 = DS18B20(addr2);
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1,tStatus1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2,tStatus2, HYSTERESIS_TEMP_STEP);
       break;
     case 5:
       temp1 = DS18B20(addr1);
       temp2 = DS18B20(addr2);
       temp3 = DS18B20(addr3);
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
-      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3, HYSTERESIS_TEMP_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1,tStatus1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2,tStatus2, HYSTERESIS_TEMP_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3,tStatus3, HYSTERESIS_TEMP_STEP);
       break;
     case 6:
       temp1 = DS18B20(addr1);
       temp2 = DS18B20(addr2);
       temp3 = DS18B20(addr3);
       temp4 = DS18B20(addr4);
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
-      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3, HYSTERESIS_TEMP_STEP);
-      tStatus4 = tempcontrol(temp4, tPIN4, Day, temp_Day4, temp_Night4, HYSTERESIS_TEMP_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1,tStatus1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, temp_Day2, temp_Night2,tStatus2, HYSTERESIS_TEMP_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3,tStatus3, HYSTERESIS_TEMP_STEP);
+      tStatus4 = tempcontrol(temp4, tPIN4, Day, temp_Day4, temp_Night4,tStatus4, HYSTERESIS_TEMP_STEP);
       break;
     case 7:
       temp1 = DS18B20(addr1);
       temp2 = DS18B20(addr2);
       temp3 = dht1.readTemperature();
       temp4 = dht1.readHumidity();
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
-      tStatus1 = tempcontrol(temp1, tPIN2, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
-      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3, HYSTERESIS_TEMP_STEP);
-      tStatus4 = tempcontrol(temp4, tPIN4, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1,tStatus1, HYSTERESIS_TEMP_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN2, Day, temp_Day2, temp_Night2,tStatus2, HYSTERESIS_TEMP_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day3, temp_Night3,tStatus3, HYSTERESIS_TEMP_STEP);
+      tStatus4 = tempcontrol(temp4, tPIN4, Day, hum_Day1, hum_Night1,tStatus4, HYSTERESIS_HUM_STEP);
       break;
     case 8:
       temp1 = dht1.readTemperature();
       temp2 = dht1.readHumidity();
       temp3 = dht2.readTemperature();
       temp4 = dht2.readHumidity();
-      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1, HYSTERESIS_TEMP_STEP);
-      tStatus2 = tempcontrol(temp2, tPIN2, Day, hum_Day1, hum_Night1, HYSTERESIS_HUM_STEP);
-      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day2, temp_Night2, HYSTERESIS_TEMP_STEP);
-      tStatus4 = tempcontrol(temp4, tPIN4, Day, hum_Day2, hum_Night2, HYSTERESIS_HUM_STEP);
+      tStatus1 = tempcontrol(temp1, tPIN1, Day, temp_Day1, temp_Night1,tStatus1, HYSTERESIS_TEMP_STEP);
+      tStatus2 = tempcontrol(temp2, tPIN2, Day, hum_Day1, hum_Night1,tStatus2, HYSTERESIS_HUM_STEP);
+      tStatus3 = tempcontrol(temp3, tPIN3, Day, temp_Day2, temp_Night2,tStatus3, HYSTERESIS_TEMP_STEP);
+      tStatus4 = tempcontrol(temp4, tPIN4, Day, hum_Day2, hum_Night2,tStatus4, HYSTERESIS_HUM_STEP);
       break;
   }
 }
-int tempcontrol(float temp, int PIN, boolean Day, int pDay, int pNight, int Hstep) { //Hysteresis
-  int Status;
+int tempcontrol(float temp, int PIN, boolean Day, int pDay, int pNight,int Status, float Hstep) { //Hysteresis
  if (temp >= ((Day) ? pDay + Hstep : pNight + Hstep)) Status = LOW; //
- if (temp <= ((Day) ? pDay - Hstep : pNight - Hstep )) Status = HIGH;  //
-  
+ if (temp <= ((Day) ? pDay - Hstep  : pNight - Hstep  )) Status = HIGH;  //
+ 
    
-  
   digitalWrite(PIN, Status);
   delay (100);
   return Status;
